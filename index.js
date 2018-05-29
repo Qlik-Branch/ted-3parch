@@ -64,7 +64,7 @@ let compareLibrary = library => {
         }
       })
     } else {
-      outputLibraryInfo(
+      logResults(
         library,
         logColor("FAILED", "red"),
         "Local file not found"
@@ -103,7 +103,7 @@ let logResults = (library, result, reason) => {
     console.log(`  Modification Reason: ${library.modificationReason}`)
   }
   console.log(`               Result: ${result}`)
-  if (result === "Failed") console.log(`             Reason: ${reason}`)
+  if (reason) console.log(`               Reason: ${reason}`)
   logSpacers(1)
 }
 
@@ -116,7 +116,7 @@ let logSpacers = count => {
 
 
 let referenceFile = argv.config
-let workingDir = argv.working || __dirname
+let workingDir = argv.working || process.cwd()
 
 let counts = {
   passed: 0,
