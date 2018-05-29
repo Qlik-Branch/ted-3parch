@@ -4,8 +4,8 @@ A **3**rd **PAR**ty **CH**ecker CLI to compare included/embedded 3rd party libra
 
 - [Installation](#installation)
 - [Usage](#usage)
-- [Configuration File](#configuration-file)
 - [Command Line Arguments](#command-line-arguments)
+- [Configuration File](#configuration-file)
 - [Example](#example)
 
 ## Installation
