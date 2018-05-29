@@ -40,40 +40,55 @@ let compareLibrary = library => {
     if (fs.existsSync(library.localPath)) {
       // look for the original source online
       request(library.source, (err, response, body) => {
-        let downloaded = body
-        // read in the local file
-        let compareFile = fs.readFileSync(library.localPath).toString()
+        if (response && response.statusCode === 200) {
+          let downloaded = body
+          // read in the local file
+          let compareFile = fs.readFileSync(library.localPath).toString()
 
-        // set the offset numbers in case, otherwise start at the beginning of the file
-        let offset = library.offset || 0
-        // set the length if specified, otherwise use the length of the downloaded body.
-        let length = library.length || downloaded.length
+          // set the offset numbers in case, otherwise start at the beginning of the file
+          let offset = library.offset || 0
+          // set the length if specified, otherwise use the length of the downloaded body.
+          let length = library.length || downloaded.length
 
-        // ensure all CRLFs become LFs just to be safe
-        downloaded = downloaded.replace(/\r\n/g, "\n")
+          // ensure all CRLFs become LFs just to be safe
+          downloaded = downloaded.replace(/\r\n/g, "\n")
 
-        // cut the local content down to what's specified above
-        compareFile = compareFile.substr(offset, length)
+          // cut the local content down to what's specified above
+          compareFile = compareFile.substr(offset, length)
 
-        // ensure all CRLFs become LFs just to be safe
-        compareFile = compareFile.replace(/\r\n/g, "\n")
-        if (library.modified) {
-          // config specified modified so we just output that and
-          // save diffs if specified
-          logResults(library, logColor("MODIFIED", "red"))
-          saveDiffs(library.library, downloaded, compareFile)
-          counts.modified++
-        } else if (compareFile == downloaded) {
-          // files are the same, no modifications made
-          logResults(library, logColor("PASSED", "green"))
-          counts.passed++
+          // ensure all CRLFs become LFs just to be safe
+          compareFile = compareFile.replace(/\r\n/g, "\n")
+          if (library.modified) {
+            // config specified modified so we just output that and
+            // save diffs if specified
+            logResults(library, logColor("MODIFIED", "red"))
+            saveDiffs(library.library, downloaded, compareFile)
+            counts.modified++
+          } else if (compareFile == downloaded) {
+            // files are the same, no modifications made
+            logResults(library, logColor("PASSED", "green"))
+            counts.passed++
+          } else {
+            // files are different, something's changed
+            logResults(
+              library,
+              logColor("FAILED", "red"),
+              "Files are different"
+            )
+            saveDiffs(library.library, downloaded, compareFile)
+            counts.failed++
+          }
+          resolve()
         } else {
-          // files are different, something's changed
-          logResults(library, logColor("FAILED", "red"), "Files are different")
-          saveDiffs(library.library, downloaded, compareFile)
+          logResults(
+            library,
+            logColor("FAILED", "red"),
+            `Received ${response &&
+              response.statusCode} status code from HTTP source request.`
+          )
           counts.failed++
+          resolve()
         }
-        resolve()
       })
     } else {
       // couldn't find the local file...that's a fail
