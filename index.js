@@ -14,11 +14,15 @@ let argv = require("yargs")
   .alias("d", "diff-dir")
   .nargs("d", 1)
   .describe("d", "the directory to output files to diff")
+  .alias("v", "verbose")
+  .nargs("v", 0)
+  .describe("v", "adds more detail when outputting")
   .demandOption(["c"])
   .help("help")
-  .alias("h", "help")
-  .alias("v", "version").argv
+  .alias("h", "help").argv
 
+// save the left and right of a comparison into the folder specified
+// in diff-dir argument
 let saveDiffs = (library, left, right) => {
   if (argv.diffDir) {
     let leftFile = path.join(argv.diffDir, "/left/", `${library}.js`)
@@ -30,51 +34,58 @@ let saveDiffs = (library, left, right) => {
 
 let compareLibrary = library => {
   return new Promise((resolve, reject) => {
-    if (fs.existsSync(path.join(workingDir, library.location))) {
+    // mutating library object here. Probably not a good idea but we can look
+    // at that later
+    library.localPath = path.join(workingDir, library.location)
+    // make sure the local file exists
+    if (fs.existsSync(library.localPath)) {
+      // look for the original source online
       request(library.source, (err, response, body) => {
         let downloaded = body
-        let compareFile = fs
-          .readFileSync(path.join(workingDir, library.location))
-          .toString()
+        // read in the local file
+        let compareFile = fs.readFileSync(library.localPath).toString()
+
+        // set the offset numbers in case, otherwise start at the beginning of the file
         let offset = library.offset || 0
+        // set the length if specified, otherwise use the length of the downloaded body.
         let length = library.length || downloaded.length
 
+        // ensure all CRLFs become LFs just to be safe
         downloaded = downloaded.replace(/\r\n/g, "\n")
+
+        // cut the local content down to what's specified above
         compareFile = compareFile.substr(offset, length)
+
+        // ensure all CRLFs become LFs just to be safe
         compareFile = compareFile.replace(/\r\n/g, "\n")
         if (library.modified) {
+          // config specified modified so we just output that and
+          // save diffs if specified
           logResults(library, logColor("MODIFIED", "red"))
           saveDiffs(library.library, downloaded, compareFile)
           counts.modified++
-          resolve()
+        } else if (compareFile == downloaded) {
+          // files are the same, no modifications made
+          logResults(library, logColor("PASSED", "green"))
+          counts.passed++
         } else {
-          if (compareFile == downloaded) {
-            logResults(library, logColor("PASSED", "green"))
-            counts.passed++
-          } else {
-            logResults(
-              library,
-              logColor("FAILED", "red"),
-              "Files are different"
-            )
-            saveDiffs(library.library, downloaded, compareFile)
-            counts.failed++
-          }
-          resolve()
+          // files are different, something's changed
+          logResults(library, logColor("FAILED", "red"), "Files are different")
+          saveDiffs(library.library, downloaded, compareFile)
+          counts.failed++
         }
+        resolve()
       })
     } else {
-      logResults(
-        library,
-        logColor("FAILED", "red"),
-        "Local file not found"
-      )
+      // couldn't find the local file...that's a fail
+      logResults(library, logColor("FAILED", "red"), "Local file not found")
       counts.failed++
       resolve()
     }
   })
 }
 
+// wraps the given text in code that indicates to the console to use colors
 let logColor = (text, color) => {
   switch (color) {
     case "red":
@@ -84,6 +95,7 @@ let logColor = (text, color) => {
   }
 }
 
+// show our total counts
 let logFinalResults = () => {
   logSpacers(1)
   console.log("           ======Final Results======")
@@ -93,6 +105,7 @@ let logFinalResults = () => {
   logSpacers(3)
 }
 
+// show the library's info
 let logResults = (library, result, reason) => {
   console.log(`              Library: ${library.library}`)
   console.log(`              Version: ${library.version}`)
@@ -100,20 +113,25 @@ let logResults = (library, result, reason) => {
   console.log(`         Project Page: ${library.projectPage}`)
   console.log(`             Modified: ${library.modified}`)
   if (library.modified) {
+    // only need to show this if the lib is modified
     console.log(`  Modification Reason: ${library.modificationReason}`)
+  }
+  if (argv.verbose) {
+    // show the URLs for debugging purposes
+    console.log(`           Source URL: ${library.source}`)
+    console.log(`           Local Path: ${library.localPath}`)
   }
   console.log(`               Result: ${result}`)
   if (reason) console.log(`               Reason: ${reason}`)
   logSpacers(1)
 }
 
+// save some 'console.log' typing
 let logSpacers = count => {
   for (let i = 0; i < count; i++) {
     console.log("")
   }
 }
-
-
 
 let referenceFile = argv.config
 let workingDir = argv.working || process.cwd()
@@ -128,6 +146,7 @@ let librariesRaw = fs.readFileSync(referenceFile)
 let libraries = JSON.parse(librariesRaw.toString())
 
 if (argv.diffDir) {
+  // if a diff directory is specified we want to make sure it exists
   if (!fs.existsSync(argv.diffDir)) fs.mkdirSync(argv.diffDir)
   let left = path.join(argv.diffDir, "left")
   let right = path.join(argv.diffDir, "right")
