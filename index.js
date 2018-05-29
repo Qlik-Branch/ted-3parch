@@ -141,8 +141,6 @@ let counts = {
 }
 
 let configFile = argv.config || path.join(workingDir, "3parch.json")
-console.log(configFile)
-console.log(fs.existsSync(configFile))
 if (fs.existsSync(configFile)) {
   let librariesRaw = fs.readFileSync(configFile)
   let libraries = JSON.parse(librariesRaw.toString())
