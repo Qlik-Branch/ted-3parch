@@ -10,7 +10,7 @@ To make 3parch available globally for you you can run `npm link` in the project 
 
 ##Usage
 
-In order to use 3parch you'll need to create a JSON file that will specify the details of the 3rd party libraries. The JSON should look like this:
+In order to use 3parch you'll need to create a `3parch.json` JSON file in your working directory that will specify the details of the 3rd party libraries. The JSON should look like this:
 
 ```
 [{
@@ -48,10 +48,11 @@ In order to use 3parch you'll need to create a JSON file that will specify the d
 
 Once you have your JSON file you can run 3parch as follows:
 
-`3parch --config config.json`
+`3parch`
 
 The following commands are also available:
 
+- `-c, --config` - The config file to use if not the `3parch.json` file in the working directory
 - `-w, --working` - Specify what directory to work out when running 3parch.
 - `-d, --diff-dir` - If specified, 3parch will output modified libraries or failed comparisons to the path given. 3parch will create a `left` directory containing the original source and a `right` directory containing the local source.
 - `-v, --verbose` - More detail will be output when running 3parch.

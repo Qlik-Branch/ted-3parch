@@ -17,7 +17,6 @@ let argv = require("yargs")
   .alias("v", "verbose")
   .nargs("v", 0)
   .describe("v", "adds more detail when outputting")
-  .demandOption(["c"])
   .help("help")
   .alias("h", "help").argv
 
@@ -133,7 +132,6 @@ let logSpacers = count => {
   }
 }
 
-let referenceFile = argv.config
 let workingDir = argv.working || process.cwd()
 
 let counts = {
@@ -142,17 +140,26 @@ let counts = {
   modified: 0
 }
 
-let librariesRaw = fs.readFileSync(referenceFile)
-let libraries = JSON.parse(librariesRaw.toString())
+let configFile = argv.config || path.join(workingDir, "3parch.json")
+console.log(configFile)
+console.log(fs.existsSync(configFile))
+if (fs.existsSync(configFile)) {
+  let librariesRaw = fs.readFileSync(configFile)
+  let libraries = JSON.parse(librariesRaw.toString())
 
-if (argv.diffDir) {
-  // if a diff directory is specified we want to make sure it exists
-  if (!fs.existsSync(argv.diffDir)) fs.mkdirSync(argv.diffDir)
-  let left = path.join(argv.diffDir, "left")
-  let right = path.join(argv.diffDir, "right")
-  if (!fs.existsSync(left)) fs.mkdirSync(left)
-  if (!fs.existsSync(right)) fs.mkdirSync(right)
+  if (argv.diffDir) {
+    // if a diff directory is specified we want to make sure it exists
+    if (!fs.existsSync(argv.diffDir)) fs.mkdirSync(argv.diffDir)
+    let left = path.join(argv.diffDir, "left")
+    let right = path.join(argv.diffDir, "right")
+    if (!fs.existsSync(left)) fs.mkdirSync(left)
+    if (!fs.existsSync(right)) fs.mkdirSync(right)
+  }
+
+  logSpacers(3)
+  Promise.all(libraries.map(compareLibrary)).then(logFinalResults)
+} else {
+  console.log(
+    "Specify a config file with '--config' or create a '3parch.json' file in the working directory"
+  )
 }
-
-logSpacers(3)
-Promise.all(libraries.map(compareLibrary)).then(logFinalResults)
