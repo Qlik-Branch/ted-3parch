@@ -4,7 +4,9 @@ A **3**rd **PAR**ty **CH**ecker CLI to compare included/embedded 3rd party libra
 
 ##Installation
 
-As of this commit 3parch isn't on npm, so the best way to install is to simply download the source
+As of this commit 3parch isn't on npm, so the best way to install is to simply download the source. After you've done this run `npm install` for the necessary libraries.
+
+To make 3parch available globally for you you can run `npm link` in the project directory. That should make 3parch globally available and allow you to use the `3parch` command from any directory you wish.
 
 ##Usage
 
@@ -46,7 +48,7 @@ In order to use 3parch you'll need to create a JSON file that will specify the d
 
 Once you have your JSON file you can run 3parch as follows:
 
-`node index.js --config config.json`
+`3parch --config config.json`
 
 The following commands are also available:
 
@@ -58,4 +60,4 @@ The following commands are also available:
 
 The following command will run 3parch using the `config.json` as a reference for the 3rd party libraries. It will look for source files given in the `location` properties of the `config.json` file in the `~/src/my-extension` directory. If any comparisons fail or are marked as modified, the downloaded source will be placed in `~/src/my-extension/3parch/left` and a copy of the local source will be placed in `~/src/my-extension/3parch/right`.
 
-`node index.js --config config.json --working ~/src/my-extension --diff-dir ~/src/my-extension/3parch`
+`3parch --config config.json --working ~/src/my-extension --diff-dir ~/src/my-extension/3parch`
