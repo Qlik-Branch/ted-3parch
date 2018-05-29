@@ -2,6 +2,12 @@
 
 A **3**rd **PAR**ty **CH**ecker CLI to compare included/embedded 3rd party libraries against their origins
 
+- [Installation](#installation)
+- [Usage](#usage)
+- [Configuration File](#configuration-file)
+- [Command Line Arguments](#command-line-arguments)
+- [Example](#example)
+
 ## Installation
 
 As of this commit 3parch isn't on npm, so the best way to install is to simply download the source. After you've done this run `npm install` for the necessary libraries.
@@ -15,6 +21,8 @@ In order to use 3parch you'll need to create a `3parch.json` JSON file in your w
 Once you have your JSON file you can run 3parch as follows:
 
 `3parch`
+
+## Command Line Arguments
 
 The following commands are also available:
 
