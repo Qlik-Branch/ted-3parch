@@ -17,6 +17,8 @@ let argv = require("yargs")
   .alias("v", "verbose")
   .nargs("v", 0)
   .describe("v", "adds more detail when outputting")
+  .string(["w","c","d"])
+  .boolean("v")
   .help("help")
   .alias("h", "help").argv
 
