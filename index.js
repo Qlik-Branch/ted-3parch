@@ -33,10 +33,15 @@ let saveDiffs = (library, left, right) => {
   }
 }
 
-let compareLibrary = library => {
+let compareLibrary = currentLibrary => {
   return new Promise((resolve, reject) => {
-    // mutating library object here. Probably not a good idea but we can look
-    // at that later
+    // using the spread to shallow copy is fine here since it's all
+    // simple properties at the moment
+    let library = {...currentLibrary}
+
+    // pushing now to keep the libraries in order so the async
+    // of request calls doesn't mess things up
+    processedLibraries.push(library)
     library.localPath = path.join(workingDir, library.location)
     // make sure the local file exists
     if (fs.existsSync(library.localPath)) {
@@ -63,39 +68,29 @@ let compareLibrary = library => {
           if (library.modified) {
             // config specified modified so we just output that and
             // save diffs if specified
-            logResults(library, logColor("MODIFIED", "red"))
+            library.result = "MODIFIED"
             saveDiffs(library.library, downloaded, compareFile)
-            counts.modified++
           } else if (compareFile == downloaded) {
             // files are the same, no modifications made
-            logResults(library, logColor("PASSED", "green"))
-            counts.passed++
+            library.result = "PASSED"
           } else {
             // files are different, something's changed
-            logResults(
-              library,
-              logColor("FAILED", "red"),
-              "Files are different"
-            )
+            library.result = "FAILED"
+            library.resultReason = "Files are different"
             saveDiffs(library.library, downloaded, compareFile)
-            counts.failed++
           }
           resolve()
         } else {
-          logResults(
-            library,
-            logColor("FAILED", "red"),
-            `Received ${response &&
-              response.statusCode} status code from HTTP source request.`
-          )
-          counts.failed++
+          library.result = "FAILED"
+          library.resultReason = `Received ${response &&
+            response.statusCode} status code from HTTP source request.`
           resolve()
         }
       })
     } else {
       // couldn't find the local file...that's a fail
-      logResults(library, logColor("FAILED", "red"), "Local file not found")
-      counts.failed++
+      library.result = "FAILED"
+      library.resultReason = "Local file not found"
       resolve()
     }
   })
@@ -115,14 +110,13 @@ let logColor = (text, color) => {
 let logFinalResults = () => {
   logSpacers(1)
   console.log("           ======Final Results======")
-  console.log(`               Passed: ${counts.passed}`)
-  console.log(`               Failed: ${counts.failed}`)
-  console.log(`             Modified: ${counts.modified}`)
-  logSpacers(3)
+  console.log(`               Passed: ${processedLibraries.filter(lib => lib.result === "PASSED").length}`)
+  console.log(`               Failed: ${processedLibraries.filter(lib => lib.result === "FAILED").length}`)
+  console.log(`             Modified: ${processedLibraries.filter(lib => lib.result === "MODIFIED").length}`)
 }
 
 // show the library's info
-let logResults = (library, result, reason) => {
+let logResults = (library) => {
   console.log(`              Library: ${library.library}`)
   console.log(`              Version: ${library.version}`)
   console.log(`              Purpose: ${library.purpose}`)
@@ -137,8 +131,8 @@ let logResults = (library, result, reason) => {
     console.log(`           Source URL: ${library.source}`)
     console.log(`           Local Path: ${library.localPath}`)
   }
-  console.log(`               Result: ${result}`)
-  if (reason) console.log(`               Reason: ${reason}`)
+  console.log(`               Result: ${getResultWithColor(library.result)}`)
+  if (library.resultReason) console.log(`               Reason: ${library.resultReason}`)
   logSpacers(1)
 }
 
@@ -149,13 +143,13 @@ let logSpacers = count => {
   }
 }
 
-let workingDir = argv.working || process.cwd()
-
-let counts = {
-  passed: 0,
-  failed: 0,
-  modified: 0
+let getResultWithColor = (result) => {
+  return logColor(result, result === "PASSED" ? "green" : "red")
 }
+
+let processedLibraries = []
+
+let workingDir = argv.working || process.cwd()
 
 let configFile = argv.config || path.join(workingDir, "3parch.json")
 if (fs.existsSync(configFile)) {
@@ -171,8 +165,12 @@ if (fs.existsSync(configFile)) {
     if (!fs.existsSync(right)) fs.mkdirSync(right)
   }
 
-  logSpacers(3)
-  Promise.all(libraries.map(compareLibrary)).then(logFinalResults)
+  Promise.all(libraries.map(compareLibrary)).then(() => {
+    logSpacers(3)
+    processedLibraries.forEach(logResults)
+    logFinalResults()
+    logSpacers(3)
+  })
 } else {
   console.log(
     "Specify a config file with '--config' or create a '3parch.json' file in the working directory"
