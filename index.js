@@ -3,6 +3,7 @@
 let fs = require("fs")
 let path = require("path")
 let request = require("request")
+let ProgressBar = require('progress')
 let argv = require("yargs")
   .usage("Usage: $0 [options]")
   .alias("c", "config")
@@ -80,11 +81,13 @@ let compareLibrary = currentLibrary => {
             saveDiffs(library.library, downloaded, compareFile)
           }
           resolve()
+          bar.tick()
         } else {
           library.result = "FAILED"
           library.resultReason = `Received ${response &&
             response.statusCode} status code from HTTP source request.`
           resolve()
+          bar.tick()
         }
       })
     } else {
@@ -92,6 +95,7 @@ let compareLibrary = currentLibrary => {
       library.result = "FAILED"
       library.resultReason = "Local file not found"
       resolve()
+      bar.tick()
     }
   })
 }
@@ -150,11 +154,14 @@ let getResultWithColor = (result) => {
 let processedLibraries = []
 
 let workingDir = argv.working || process.cwd()
+let bar
 
 let configFile = argv.config || path.join(workingDir, "3parch.json")
 if (fs.existsSync(configFile)) {
   let librariesRaw = fs.readFileSync(configFile)
   let libraries = JSON.parse(librariesRaw.toString())
+  logSpacers(2)
+  bar = new ProgressBar('              Running: :bar :current/:total (:eta secs)', { width: libraries.length*4, total: libraries.length, clear: true })
 
   if (argv.diffDir) {
     // if a diff directory is specified we want to make sure it exists
@@ -166,10 +173,9 @@ if (fs.existsSync(configFile)) {
   }
 
   Promise.all(libraries.map(compareLibrary)).then(() => {
-    logSpacers(3)
     processedLibraries.forEach(logResults)
     logFinalResults()
-    logSpacers(3)
+    logSpacers(2)
   })
 } else {
   console.log(
