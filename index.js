@@ -179,9 +179,9 @@ if (fs.existsSync(configFile)) {
     let left = path.join(argv.diffDir, "left")
     let right = path.join(argv.diffDir, "right")
     if (!fs.existsSync(left)) fs.mkdirSync(left)
-    else cleanFolder(path.join(argv.diffDir, "/left/"));
+    else cleanFolder(left);
     if (!fs.existsSync(right)) fs.mkdirSync(right)
-    else cleanFolder(path.join(argv.diffDir, "/right/"));
+    else cleanFolder(right);
   }
 
   Promise.all(libraries.map(compareLibrary)).then(() => {
