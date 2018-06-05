@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-var fs = require('fs')
+let fs = require('fs')
 let path = require("path")
 let request = require("request")
 let ProgressBar = require('progress')
