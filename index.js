@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-let fs = require("fs")
+let fs = require('fs')
 let path = require("path")
 let request = require("request")
 let ProgressBar = require('progress')
@@ -26,13 +26,23 @@ let argv = require("yargs")
 // save the left and right of a comparison into the folder specified
 // in diff-dir argument
 let saveDiffs = (library, left, right) => {
-  if (argv.diffDir) {
+  if (argv.diffDir) {    
     let leftFile = path.join(argv.diffDir, "/left/", `${library}.js`)
     let rightFile = path.join(argv.diffDir, "/right/", `${library}.js`)
     fs.writeFileSync(leftFile, left, {})
     fs.writeFileSync(rightFile, right)
   }
 }
+
+// Remove all files from a 1st level folder
+let cleanFolder = function (path) {
+    fs.readdirSync(path).forEach(function (file, index) {
+      let curPath = path + "/" + file;
+      if (!fs.lstatSync(curPath).isDirectory()) { // recurse
+        fs.unlinkSync(curPath);
+      }
+    });
+};
 
 let compareLibrary = currentLibrary => {
   return new Promise((resolve, reject) => {
@@ -169,7 +179,9 @@ if (fs.existsSync(configFile)) {
     let left = path.join(argv.diffDir, "left")
     let right = path.join(argv.diffDir, "right")
     if (!fs.existsSync(left)) fs.mkdirSync(left)
+    else cleanFolder(left);
     if (!fs.existsSync(right)) fs.mkdirSync(right)
+    else cleanFolder(right);
   }
 
   Promise.all(libraries.map(compareLibrary)).then(() => {
