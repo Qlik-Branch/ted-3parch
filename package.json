@@ -1,7 +1,8 @@
 {
   "name": "3parch",
   "version": "0.0.1",
-  "description": "",
+  "description": "A command line tool to compare 3rd party libraries with their original source",
+  "bugs": "https://github.com/Qlik-Branch/3parch/issues",
   "preferGlobal": true,
   "bin": "index.js",
   "main": "index.js",
@@ -9,8 +10,12 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "rjriel",
+  "author": "Rey Riel",
   "license": "ISC",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/Qlik-Branch/3parch.git"
+  },
   "dependencies": {
     "progress": "^2.0.0",
     "request": "^2.87.0",
