@@ -3,7 +3,7 @@
 let fs = require("fs")
 let path = require("path")
 let request = require("request")
-let ProgressBar = require('progress')
+let ProgressBar = require("progress")
 let argv = require("yargs")
   .usage("Usage: $0 [options]")
   .alias("c", "config")
@@ -38,7 +38,7 @@ let compareLibrary = currentLibrary => {
   return new Promise((resolve, reject) => {
     // using the spread to shallow copy is fine here since it's all
     // simple properties at the moment
-    let library = {...currentLibrary}
+    let library = { ...currentLibrary }
 
     // pushing now to keep the libraries in order so the async
     // of request calls doesn't mess things up
@@ -61,7 +61,7 @@ let compareLibrary = currentLibrary => {
           // set the offset numbers in case, otherwise start at the beginning of the file
           let offset = library.offset || 0
           // set the length if specified, otherwise use the length of the downloaded body.
-          let length = library.length || downloaded.length
+          let length = library.length || compareFile.length - offset
 
           // cut the local content down to what's specified above
           compareFile = compareFile.substr(offset, length)
@@ -114,13 +114,25 @@ let logColor = (text, color) => {
 let logFinalResults = () => {
   logSpacers(1)
   console.log("           ======Final Results======")
-  console.log(`               Passed: ${processedLibraries.filter(lib => lib.result === "PASSED").length}`)
-  console.log(`               Failed: ${processedLibraries.filter(lib => lib.result === "FAILED").length}`)
-  console.log(`             Modified: ${processedLibraries.filter(lib => lib.result === "MODIFIED").length}`)
+  console.log(
+    `               Passed: ${
+      processedLibraries.filter(lib => lib.result === "PASSED").length
+    }`
+  )
+  console.log(
+    `               Failed: ${
+      processedLibraries.filter(lib => lib.result === "FAILED").length
+    }`
+  )
+  console.log(
+    `             Modified: ${
+      processedLibraries.filter(lib => lib.result === "MODIFIED").length
+    }`
+  )
 }
 
 // show the library's info
-let logResults = (library) => {
+let logResults = library => {
   console.log(`              Library: ${library.library}`)
   console.log(`              Version: ${library.version}`)
   console.log(`              Purpose: ${library.purpose}`)
@@ -136,7 +148,8 @@ let logResults = (library) => {
     console.log(`           Local Path: ${library.localPath}`)
   }
   console.log(`               Result: ${getResultWithColor(library.result)}`)
-  if (library.resultReason) console.log(`               Reason: ${library.resultReason}`)
+  if (library.resultReason)
+    console.log(`               Reason: ${library.resultReason}`)
   logSpacers(1)
 }
 
@@ -147,7 +160,7 @@ let logSpacers = count => {
   }
 }
 
-let getResultWithColor = (result) => {
+let getResultWithColor = result => {
   return logColor(result, result === "PASSED" ? "green" : "red")
 }
 
@@ -161,7 +174,10 @@ if (fs.existsSync(configFile)) {
   let librariesRaw = fs.readFileSync(configFile)
   let libraries = JSON.parse(librariesRaw.toString())
   logSpacers(2)
-  bar = new ProgressBar('              Running: :bar :current/:total (:eta secs)', { width: libraries.length*4, total: libraries.length, clear: true })
+  bar = new ProgressBar(
+    "              Running: :bar :current/:total (:eta secs)",
+    { width: libraries.length * 4, total: libraries.length, clear: true }
+  )
 
   if (argv.diffDir) {
     // if a diff directory is specified we want to make sure it exists
