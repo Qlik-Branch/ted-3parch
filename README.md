@@ -30,6 +30,7 @@ The following commands are also available:
 - `-w, --working` - Specify what directory to work out when running 3parch.
 - `-d, --diff-dir` - If specified, 3parch will output modified libraries or failed comparisons to the path given. 3parch will create a `left` directory containing the original source and a `right` directory containing the local source.
 - `-v, --verbose` - More detail will be output when running 3parch.
+- `-j, --json [companyName] [extensionName]` - Generate a JSON report for the tool output, to be used inside the `report-generator` tool, Both `[companyName]` and `[extensionName]` are optional arguments, you can ignore them and still generate the report using `-j`.
 
 ## Configuration File
 

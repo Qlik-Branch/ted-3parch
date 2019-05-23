@@ -21,6 +21,7 @@ let argv = require("yargs")
   .string(["w", "c", "d"])
   .boolean("v")
   .help("help")
+  .option('j', {alias: 'json'})
   .alias("h", "help").argv
 
 // save the left and right of a comparison into the folder specified
@@ -174,6 +175,42 @@ let getResultWithColor = result => {
   return logColor(result, result === "PASSED" ? "green" : "red")
 }
 
+let createReportJSONObject = (processedLibraries) => {
+  let failedCount = processedLibraries.filter(lib => lib.result === "FAILED").length
+  let companyName = typeof (argv.json) === 'string' ? argv.json : '{Company Name}'
+  let extensionName =  argv._[0] || '{Extension Name}'
+  let title = companyName + " - " + extensionName
+  let reportHeader = {"Passed Libs": processedLibraries.filter(lib => lib.result === "PASSED").length,
+                    "Modified Libs": processedLibraries.filter(lib => lib.result === "MODIFIED").length,
+                    "Failed Libs" : processedLibraries.filter(lib => lib.result === "FAILED").length}
+  let jsonReportObj = {"reportHeader": reportHeader,
+                      "status": failedCount == 0,
+                      "title": title,
+                      "toolName": "3parch",
+                      "tableData1": {"tableName": "Welcome to the 3parch tool", "tableData": []}}
+  processedLibraries.map(function(lib) {        
+    jsonReportObj.tableData1.tableData.push({ 
+      "Library": lib.library,
+      "Version": lib.version,
+      "Purpose": lib.purpose,
+      "Project Page": lib.projectPage,
+      "Original Source": lib.source,
+      "Local Path": lib.localPath,
+      "Status": lib.result,
+      "Modified" : lib.modified && lib.modified == true ? "Yes": "No",
+      "Modification Reason": lib.modificationReason ? lib.modificationReason : "-"
+    });
+  });
+  return jsonReportObj;
+}
+
+let generateJSONFile = (jsonData) => {
+  let jsonFile = "report.json";
+  fs.writeFile(jsonFile, JSON.stringify(jsonData), function(err) {
+    if (err) throw err;
+  });
+}
+
 let processedLibraries = []
 
 let workingDir = argv.working || process.cwd()
@@ -204,6 +241,9 @@ if (fs.existsSync(configFile)) {
     processedLibraries.forEach(logResults)
     logFinalResults()
     logSpacers(2)
+    if (argv.json) {
+      generateJSONFile(createReportJSONObject(processedLibraries))
+    }
   })
 } else {
   console.log(
