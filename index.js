@@ -206,7 +206,5 @@ if (fs.existsSync(configFile)) {
     logSpacers(2)
   })
 } else {
-  console.log(
-    "Specify a config file with '--config' or create a '3parch.json' file in the working directory"
-  )
+  throw new Error("Specify a config file with '--config' or create a '3parch.json' file in the working directory")
 }
