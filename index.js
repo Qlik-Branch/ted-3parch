@@ -18,10 +18,12 @@ let argv = require("yargs")
   .alias("v", "verbose")
   .nargs("v", 0)
   .describe("v", "adds more detail when outputting")
+  .alias("j", "json")
+  .nargs("j", 0)
+  .describe("j", "creates a json file with the results")
   .string(["w", "c", "d"])
   .boolean("v")
   .help("help")
-  .option('j', {alias: 'json'})
   .alias("h", "help").argv
 
 // save the left and right of a comparison into the folder specified
@@ -182,13 +184,13 @@ let createReportJSONObject = (processedLibraries) => {
   let title = companyName + " - " + extensionName
   let reportHeader = {"Passed Libs": processedLibraries.filter(lib => lib.result === "PASSED").length,
                     "Modified Libs": processedLibraries.filter(lib => lib.result === "MODIFIED").length,
-                    "Failed Libs" : processedLibraries.filter(lib => lib.result === "FAILED").length}
+                    "Failed Libs" : failedCount}
   let jsonReportObj = {"reportHeader": reportHeader,
                       "status": failedCount == 0,
                       "title": title,
                       "toolName": "3parch",
                       "tableData1": {"tableName": "Welcome to the 3parch tool", "tableData": []}}
-  processedLibraries.map(function(lib) {        
+  processedLibraries.map(lib => {        
     jsonReportObj.tableData1.tableData.push({ 
       "Library": lib.library,
       "Version": lib.version,
@@ -207,7 +209,7 @@ let createReportJSONObject = (processedLibraries) => {
 let generateJSONFile = (jsonData) => {
   let jsonFile = "report.json";
   fs.writeFile(jsonFile, JSON.stringify(jsonData), function(err) {
-    if (err) throw err;
+    if (err) throw new Error(err);
   });
 }
 
