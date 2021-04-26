@@ -19,6 +19,6 @@
   "dependencies": {
     "progress": "^2.0.0",
     "request": "^2.87.0",
-    "yargs": "^11.0.0"
+    "yargs": "^13.0.0"
   }
 }
