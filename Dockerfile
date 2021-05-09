@@ -1,5 +1,5 @@
 # Use an node runtime as a parent image
-FROM node:10-alpine
+FROM node:16-alpine
 
 # Create base directory
 RUN mkdir ted-3parch
